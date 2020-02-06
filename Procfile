@@ -1,1 +1,1 @@
-web: gunicorn music-through-the-years.app:app
+web: gunicorn app:app
