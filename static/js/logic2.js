@@ -4,7 +4,7 @@ function buildCharts(sample) {
     var resultArray = data.filter(sampleObj => sampleObj.artist == sample);
     var song = resultArray.map(row => row.title)
     var length = resultArray.map(row => row.issue_date.length)
-    var layout = { title: "#1 Songs and Number of Weeks at #1",margin: { t: 50, b: 200 } };
+    var layout = { title: `${sample}'s Hit Songs and Number of Weeks at #1`,margin: { t: 50, b: 200 } };
     console.log(resultArray)
     console.log(length)
     var data = [
@@ -17,23 +17,43 @@ function buildCharts(sample) {
     ];
     
     Plotly.newPlot("Chart3", data, layout);
+    
+    ////Group songs based on title to remove the duplicates
+    var output = [];
+
+    resultArray.forEach(function(item) {
+      var existing = output.filter(function(v, i) {
+        return v.title == item.title;
+      });
+      if (existing.length) {
+        var existingIndex = output.indexOf(existing[0]);
+        output[existingIndex].issue_date = output[existingIndex].issue_date.concat(item.issue_date);
+      } else {
+        if (typeof item.issue_date == 'string')
+          item.issue_date = [item.issue_date];
+        output.push(item);
+      }
+    });
+    
+
+
 
     
-    var layout2 = { title: "#1 Songs and Number of Weeks at #1",margin: { t: 50, b: 200 } };
-    var desired_maximum_marker_size = 40;
-    var size = length;
-    var year = resultArray.map(row => row.year);
+    var layout2 = { title: `${sample}'s Hit Songs Over Time`,margin: { t: 50, b: 200 } };
+    var desired_maximum_marker_size = 40;   
+    var length2 = output.map(row => row.issue_date.length)
+    var size = length2;
+    var year2 = output.map(row => row.year);
     var data2 = [
       {
-        x: year,
-        y: length,
+        x: year2,
+        y: length2,
         mode: "markers",
         marker: {
           size: size,
           sizeref: 2.0 * Math.max(...size) / (desired_maximum_marker_size**2),
           sizemode: 'area'
-        }
-      }];
+      }}];
     
     Plotly.newPlot("Chart4", data2, layout2);
 
@@ -47,7 +67,27 @@ function init() {
   
   // Use the list of sample names to populate the select options
   d3.json("/artists").then((data) => {
-    var sampleNames = [...new Set(data.map(row => row.artist))].sort();
+    var output = [];
+
+    data.forEach(function(item) {
+      var existing = output.filter(function(v, i) {
+        return v.artist == item.artist;
+      });
+      if (existing.length) {
+        var existingIndex = output.indexOf(existing[0]);
+        output[existingIndex].title = output[existingIndex].title.concat(item.title);
+      } else {
+        if (typeof item.title == 'string')
+          item.title = [item.title];
+        output.push(item);
+      }
+    });
+    console.log(output)
+ var resultArray2 = output.filter(sampleObj => sampleObj.title.length >1);
+ var sampleNames = [...new Set(resultArray2.map(row => row.artist))].sort();
+    
+    // var resultArray2 = data.filter(sampleObj => sampleObj.issue_date.length >2);
+    // var sampleNames = [...new Set(data.map(row => row.artist))].sort();
 
     sampleNames.forEach((sample) => {
       selector
